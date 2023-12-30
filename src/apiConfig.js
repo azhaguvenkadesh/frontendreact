@@ -1,1 +1,1 @@
-export const apiurl = 'https://8080-efbefaadb308602045abfadcfbcdcbetwo.premiumproject.examly.io';
+export const apiurl = 'http://18.212.109.10';
