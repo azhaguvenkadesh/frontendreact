@@ -1,26 +1,37 @@
 version: 0.2
-
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - aws --version
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <Your-ECR-Repository-URI>
+    - echo Logging in to Amazon ECR....
+    - aws --version
+    - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 013877434595.dkr.ecr.us-east-1.amazonaws.com
 
+    # Replace with this to your repository URI
+    - REPOSITORY_URI=013877434595.dkr.ecr.us-east-1.amazonaws.com/frontendrepo
+    - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
   build:
     commands:
-      - echo Build started on `date`
-      - echo Building the Docker image...
-      - docker build -t <Your-ECR-Repository-URI>:latest .
-      - docker tag <Your-ECR-Repository-URI>:latest <Your-ECR-Repository-URI>:build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
-
+    - echo Build started on `date`
+    - echo Building the React...
+    - npm run build
+    - echo Checking the build files...
+    - ls build/
+    - echo Building the Docker image...
+    - docker build . -t $REPOSITORY_URI:latest
+    - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing to ECR...
-      - docker push <Your-ECR-Repository-URI>:latest
-      - docker push <Your-ECR-Repository-URI>:build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
-
+    - echo Build completed on `date`
+    - echo Pushing to repo...
+    - docker push $REPOSITORY_URI:latest
+    - docker push $REPOSITORY_URI:$IMAGE_TAG
+    - echo Writing image definitions file...
+    - DOCKER_CONTAINER_NAME=springapp
+    - printf '[{"name":"%s","imageUri":"%s"}]' $DOCKER_CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+    - echo $DOCKER_CONTAINER_NAME
+    - echo Printing imagedefinitions.json...
+    - cat imagedefinitions.json
 artifacts:
-  files: 
-    - imagedefinitions.json
+  files:
+  - imagedefinitions.json
+  - build/
