@@ -1,5 +1,5 @@
 # Use a base image with Node.js already installed
-FROM node:14-alpine
+FROM node:18-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -10,8 +10,11 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm install
 
-# Copy the entire React app to the container
-COPY . .
+# Copy the build React app to the container
+COPY . /app/
+
+# Copy Public folder
+#COPY build/ /app/
 
 # Build the React app
 RUN npm run build
